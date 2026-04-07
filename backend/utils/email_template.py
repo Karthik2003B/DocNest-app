@@ -31,7 +31,7 @@ def build_email_template(title, message, highlight=None):
                             ''' if highlight else ''}
                             
                             <div style="text-align: center; margin-top: 10px;">
-                                <a href="http://localhost:8501" style="display: inline-block; padding: 16px 36px; background: linear-gradient(135deg, #0284c7 0%, #3b82f6 100%); color: #ffffff; font-size: 16px; font-weight: 600; text-decoration: none; border-radius: 12px; box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.5), inset 0 1px 0 rgba(255,255,255,0.2); text-transform: uppercase; letter-spacing: 1px;">
+                                <a <a href="https://docnest.streamlit.app"> style="display: inline-block; padding: 16px 36px; background: linear-gradient(135deg, #0284c7 0%, #3b82f6 100%); color: #ffffff; font-size: 16px; font-weight: 600; text-decoration: none; border-radius: 12px; box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.5), inset 0 1px 0 rgba(255,255,255,0.2); text-transform: uppercase; letter-spacing: 1px;">
                                     Access Workspace
                                 </a>
                             </div>
