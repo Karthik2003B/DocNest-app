@@ -5,14 +5,14 @@ from pathlib import Path
 import shutil
 import uuid
 from datetime import date
-from models.document import Document
-from database.connection import get_db
-from schemas.document import DocumentResponse
-from services.document_service import DocumentService
+from backend.models.document import Document
+from backend.database.connection import get_db
+from backend.schemas.document import DocumentResponse
+from backend.services.document_service import DocumentService
 from datetime import date
-from utils.email import send_email
-from repositories.user_repository import UserRepository
-from utils.email_template import build_email_template
+from backend.utils.email import send_email
+from backend.repositories.user_repository import UserRepository
+from backend.utils.email_template import build_email_template
 router = APIRouter(prefix="/documents", tags=["Documents"])
 
 UPLOAD_DIR = Path("uploads")

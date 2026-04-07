@@ -1,12 +1,12 @@
 import streamlit as st
 from pathlib import Path
 import base64
-from utils import (check_and_send_alerts)
+from frontend.utils import (check_and_send_alerts)
 BASE_DIR = Path(__file__).resolve().parent
 import requests
 BASE_URL = "http://127.0.0.1:8000"
 
-from utils import (
+from frontend.utils import (
     register_user,
     login_user,
     create_document,

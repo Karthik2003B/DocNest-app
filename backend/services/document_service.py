@@ -1,6 +1,6 @@
 from datetime import date
 from fastapi import HTTPException
-from repositories.document_repository import DocumentRepository
+from backend.repositories.document_repository import DocumentRepository
 
 
 class DocumentService:

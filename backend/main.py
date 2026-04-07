@@ -1,14 +1,14 @@
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
-from database.base import Base
-from database.connection import engine
+from backend.database.base import Base
+from backend.database.connection import engine
 
-from models.user import User
-from models.document import Document
+from backend.models.user import User
+from backend.models.document import Document
 
-from api.auth import router as auth_router
-from api.documents import router as document_router
+from backend.api.auth import router as auth_router
+from backend.api.documents import router as document_router
 
 Base.metadata.create_all(bind=engine)
 
