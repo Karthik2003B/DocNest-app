@@ -1,9 +1,8 @@
-fastapi==0.110.0
-uvicorn==0.29.0
-sqlalchemy==2.0.29
-pydantic==2.7.1
-python-multipart==0.0.9
+fastapi==0.103.2
+uvicorn==0.23.2
+sqlalchemy==2.0.23
+pydantic==1.10.13
+python-multipart==0.0.6
 requests==2.31.0
 sendgrid==6.11.0
-python-dotenv==1.0.1
-streamlit==1.35.0
+python-dotenv==1.0.0
