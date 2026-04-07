@@ -6,7 +6,7 @@ from sendgrid.helpers.mail import Mail
 from dotenv import load_dotenv
 load_dotenv()
 
-BASE_URL = "http://127.0.0.1:8000"
+BASE_URL = "https://docnest-app.onrender.com"
 
 # ================= EMAIL FUNCTION =================
 def send_email(to_email, subject, html_content):
