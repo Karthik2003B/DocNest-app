@@ -1,12 +1,12 @@
 import streamlit as st
 from pathlib import Path
 import base64
-from frontend.utils import (check_and_send_alerts)
+from utils import (check_and_send_alerts)
 BASE_DIR = Path(__file__).resolve().parent
 import requests
 BASE_URL = "https://docnest-9cwt.onrender.com"
 
-from frontend.utils import (
+from utils import (
     register_user,
     login_user,
     create_document,
