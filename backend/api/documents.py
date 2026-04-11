@@ -72,6 +72,7 @@ def create_document(
         "file_url": doc.file_url,
         "notes": doc.notes,
         "user_id": doc.user_id,
+        "created_at": doc.created_at   # ✅ ADD THIS LINE
     }
 
 @router.get("/expired/{user_id}", response_model=List[DocumentResponse])
