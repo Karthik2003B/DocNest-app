@@ -834,7 +834,7 @@ def add_document_page():
                 response = create_document(payload, uploaded_file)
 
             if response.status_code == 200:
-                st.session_state.success_msg = "✅ Document added successfully"
+                st.session_state.success_msg = " Document added successfully"
                 st.rerun()
             else:
                 st.error(safe_error_message(response, "Failed to add document"))

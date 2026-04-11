@@ -78,13 +78,43 @@ def create_document(
 @router.get("/expired/{user_id}", response_model=List[DocumentResponse])
 def get_expired_documents(user_id: int, db: Session = Depends(get_db)):
     service = DocumentService(db)
-    return service.get_expired_documents(user_id)
+    docs = service.get_expired_documents(user_id)
+
+    return [
+        {
+            "id": doc.id,
+            "title": doc.title,
+            "category": doc.category,
+            "expiry_date": doc.expiry_date,
+            "reminder_days_before": doc.reminder_days_before,
+            "file_url": doc.file_url,
+            "notes": doc.notes,
+            "user_id": doc.user_id,
+            "created_at": doc.created_at,
+        }
+        for doc in docs
+]
 
 
 @router.get("/expiring-soon/{user_id}", response_model=List[DocumentResponse])
 def get_expiring_soon_documents(user_id: int, db: Session = Depends(get_db)):
     service = DocumentService(db)
-    return service.get_expiring_soon_documents(user_id)
+    docs = service.get_expiring_soon_documents(user_id)
+
+    return [
+        {
+            "id": doc.id,
+            "title": doc.title,
+            "category": doc.category,
+            "expiry_date": doc.expiry_date,
+            "reminder_days_before": doc.reminder_days_before,
+            "file_url": doc.file_url,
+            "notes": doc.notes,
+            "user_id": doc.user_id,
+            "created_at": doc.created_at,
+        }
+        for doc in docs
+    ]
 
 
 @router.delete("/{document_id}")
@@ -94,7 +124,22 @@ def delete_document(document_id: int, db: Session = Depends(get_db)):
 
 @router.get("/{user_id}", response_model=List[DocumentResponse])
 def get_documents(user_id: int, db: Session = Depends(get_db)):
-    return db.query(Document).filter(Document.user_id == user_id).all()
+    docs = db.query(Document).filter(Document.user_id == user_id).all()
+
+    return [
+        {
+            "id": doc.id,
+            "title": doc.title,
+            "category": doc.category,
+            "expiry_date": doc.expiry_date,
+            "reminder_days_before": doc.reminder_days_before,
+            "file_url": doc.file_url,
+            "notes": doc.notes,
+            "user_id": doc.user_id,
+            "created_at": doc.created_at,
+        }
+        for doc in docs
+    ]
 
 @router.post("/send-alerts/{user_id}")
 def send_alerts(user_id: int, db: Session = Depends(get_db)):
