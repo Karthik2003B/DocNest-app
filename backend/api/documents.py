@@ -61,7 +61,18 @@ def create_document(
         "user_id": user_id,
     }
 
-    return service.create_document(document_data)
+    doc = service.create_document(document_data)
+
+    return {
+        "id": doc.id,
+        "title": doc.title,
+        "category": doc.category,
+        "expiry_date": doc.expiry_date,
+        "reminder_days_before": doc.reminder_days_before,
+        "file_url": doc.file_url,
+        "notes": doc.notes,
+        "user_id": doc.user_id,
+    }
 
 @router.get("/expired/{user_id}", response_model=List[DocumentResponse])
 def get_expired_documents(user_id: int, db: Session = Depends(get_db)):

@@ -1,14 +1,18 @@
 from datetime import date
 from fastapi import HTTPException
 from backend.repositories.document_repository import DocumentRepository
-
+from backend.models.document import Document
 
 class DocumentService:
     def __init__(self, db):
         self.document_repo = DocumentRepository(db)
 
-    def create_document(self, document_data: dict):
-        return self.document_repo.create_document(document_data)
+    def create_document(self, document_data):
+        doc = Document(**document_data)
+        self.db.add(doc)
+        self.db.commit()
+        self.db.refresh(doc)
+        return doc
 
     def get_all_documents(self, user_id: int):
         return self.document_repo.get_documents_by_user(user_id)
