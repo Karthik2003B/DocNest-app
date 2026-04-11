@@ -4,7 +4,7 @@ from datetime import date
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
 
-BASE_URL = "http://127.0.0.1:8000"
+BASE_URL = "https://docnest-app.onrender.com"
 from dotenv import load_dotenv
 import os
 
