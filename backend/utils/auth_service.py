@@ -1,6 +1,6 @@
 from fastapi import HTTPException
-from repositories.user_repository import UserRepository
-from utils.security import hash_password, verify_password
+from backend.repositories.user_repository import UserRepository
+from backend.utils.security import hash_password, verify_password
 import random
 
 

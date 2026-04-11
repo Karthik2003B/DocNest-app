@@ -1,9 +1,9 @@
 from fastapi import HTTPException
-from repositories.user_repository import UserRepository
-from utils.security import hash_password, verify_password
-from utils.email import send_email
+from backend.repositories.user_repository import UserRepository
+from backend.utils.security import hash_password, verify_password
+from backend.utils.email import send_email
 import random
-from utils.email_template import build_email_template
+from backend.utils.email_template import build_email_template
 
 class AuthService:
     def __init__(self, db):

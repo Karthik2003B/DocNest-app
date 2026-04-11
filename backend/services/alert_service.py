@@ -1,9 +1,9 @@
 from sqlalchemy.orm import Session
 from database.connection import SessionLocal
-from models.document import Document
-from repositories.user_repository import UserRepository
-from utils.email import send_email
-from utils.email_template import build_email_template
+from backend.models.document import Document
+from backend.repositories.user_repository import UserRepository
+from backend.utils.email import send_email
+from backend.utils.email_template import build_email_template
 from datetime import date
 
 

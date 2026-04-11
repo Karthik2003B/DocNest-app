@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String
 from sqlalchemy.orm import relationship
-from database.base import Base
+from backend.database.base import Base
 from sqlalchemy import Boolean
 
 class User(Base):
