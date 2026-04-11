@@ -122,24 +122,6 @@ def delete_document(document_id: int, db: Session = Depends(get_db)):
     service = DocumentService(db)
     return service.delete_document(document_id)
 
-@router.get("/{user_id}", response_model=List[DocumentResponse])
-def get_documents(user_id: int, db: Session = Depends(get_db)):
-    docs = db.query(Document).filter(Document.user_id == user_id).all()
-
-    return [
-        {
-            "id": doc.id,
-            "title": doc.title,
-            "category": doc.category,
-            "expiry_date": doc.expiry_date,
-            "reminder_days_before": doc.reminder_days_before,
-            "file_url": doc.file_url,
-            "notes": doc.notes,
-            "user_id": doc.user_id,
-            "created_at": doc.created_at,
-        }
-        for doc in docs
-    ]
 
 @router.post("/send-alerts/{user_id}")
 def send_alerts(user_id: int, db: Session = Depends(get_db)):
@@ -254,3 +236,22 @@ def update_document(doc_id: int, data: dict, db: Session = Depends(get_db)):
     db.refresh(doc)
 
     return {"message": "Document updated successfully"}
+
+@router.get("/{user_id}", response_model=List[DocumentResponse])
+def get_documents(user_id: int, db: Session = Depends(get_db)):
+    docs = db.query(Document).filter(Document.user_id == user_id).all()
+
+    return [
+        {
+            "id": doc.id,
+            "title": doc.title,
+            "category": doc.category,
+            "expiry_date": doc.expiry_date,
+            "reminder_days_before": doc.reminder_days_before,
+            "file_url": doc.file_url,
+            "notes": doc.notes,
+            "user_id": doc.user_id,
+            "created_at": doc.created_at,
+        }
+        for doc in docs
+    ]
