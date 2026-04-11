@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from database.connection import SessionLocal
+from backend.database.connection import SessionLocal
 from backend.models.document import Document
 from backend.repositories.user_repository import UserRepository
 from backend.utils.email import send_email
