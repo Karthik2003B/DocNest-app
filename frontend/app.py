@@ -5,7 +5,7 @@ from utils import (check_and_send_alerts)
 from datetime import datetime
 BASE_DIR = Path(__file__).resolve().parent
 import requests
-BASE_URL = "http://127.0.0.1:8000"
+BASE_URL = "https://docnest-9cwt.onrender.com"
 
 from utils import (
     register_user,
