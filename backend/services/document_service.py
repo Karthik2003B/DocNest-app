@@ -8,11 +8,7 @@ class DocumentService:
         self.document_repo = DocumentRepository(db)
 
     def create_document(self, document_data):
-        doc = Document(**document_data)
-        self.db.add(doc)
-        self.db.commit()
-        self.db.refresh(doc)
-        return doc
+        return self.document_repo.create_document(document_data)
 
     def get_all_documents(self, user_id: int):
         return self.document_repo.get_documents_by_user(user_id)
