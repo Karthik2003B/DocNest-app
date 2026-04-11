@@ -1,15 +1,29 @@
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
-from backend.database.base import Base
-from backend.database.connection import engine
+from database.base import Base
+from database.connection import engine
 
-from backend.models.user import User
-from backend.models.document import Document
+from models.user import User
+from models.document import Document
 
-from backend.api.auth import router as auth_router
-from backend.api.documents import router as document_router
+from api.auth import router as auth_router
+from api.documents import router as document_router
+from dotenv import load_dotenv
+from apscheduler.schedulers.background import BackgroundScheduler
+from services.alert_service import send_alerts_for_all_users
 
+scheduler = BackgroundScheduler()
+
+scheduler.add_job(
+    send_alerts_for_all_users,
+    "interval",
+    hours=24  # runs every day
+)
+
+scheduler.start()
+
+load_dotenv()
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="DocVault API")

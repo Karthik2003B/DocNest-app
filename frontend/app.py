@@ -2,9 +2,10 @@ import streamlit as st
 from pathlib import Path
 import base64
 from utils import (check_and_send_alerts)
+from datetime import datetime
 BASE_DIR = Path(__file__).resolve().parent
 import requests
-BASE_URL = "https://docnest-9cwt.onrender.com"
+BASE_URL = "http://127.0.0.1:8000"
 
 from utils import (
     register_user,
@@ -25,6 +26,12 @@ from utils import (
 from styles import apply_custom_styles
 
 
+def check_and_send_alerts(user_id):
+    try:
+        requests.post(f"{BASE_URL}/documents/send-alerts/{user_id}")
+    except:
+        pass  # don't break UI
+    
 def get_base64_image(filename):
     image_path = BASE_DIR / "assets" / filename
     if not image_path.exists():
@@ -270,7 +277,10 @@ def auth_page():
                 st.success("Login successful")
                 st.rerun()
             else:
-                st.error("Login failed")
+                 try:
+                    st.error(response.json().get("detail", "Login failed"))
+                 except:
+                    st.error(response.text)
 
         # ✅ FIXED POSITION
         if st.button("Forgot Password?"):
@@ -600,94 +610,170 @@ def metric_cards(all_docs, expiring_docs, expired_docs):
 
 
 def dashboard_page():
-    show_header()
+    if st.session_state.get("logged_in"):
 
-    # ================= USER INFO =================
-    user_name = st.session_state.get("user_name", "User")
-    user_id = st.session_state.get("user_id")
-    user_email = st.session_state.get("user_email")
+        user_id = st.session_state.get("user_id")
 
-    st.write(f"Welcome, **{user_name}**")
+        # 🔥 ADD THIS LINE
+        check_and_send_alerts(user_id)
 
-    if not user_id:
-        st.error("❌ User not logged in properly")
+        
+        show_header()
+
+        # ================= USER INFO =================
+        user_name = st.session_state.get("user_name", "User")
+        user_id = st.session_state.get("user_id")
+        user_email = st.session_state.get("user_email")
+
+        st.write(f"Welcome, **{user_name}**")
+        
+
+        if not user_id:
+            st.error("❌ User not logged in properly")
+            return
+
+        # ================= FETCH DATA =================
+        all_docs_resp = get_documents(user_id)
+        expiring_resp = get_expiring_soon_documents(user_id)
+        expired_resp = get_expired_documents(user_id)
+        
+        # if "alerts_sent" not in st.session_state:
+        #     requests.post(f"{BASE_URL}/documents/send-alerts/{user_id}")
+        #     st.session_state.alerts_sent = True
+
+        all_docs = all_docs_resp.json() if all_docs_resp.status_code == 200 else []
+        expiring_docs = expiring_resp.json() if expiring_resp.status_code == 200 else []
+        expired_docs = expired_resp.json() if expired_resp.status_code == 200 else []
+
+        print("📄 ALL DOCS:", all_docs)
+        print("📧 USER EMAIL:", user_email)
+
+        # ================= EMAIL ALERT TRIGGER =================
+        # if user_email:
+        #     check_and_send_alerts(all_docs, user_email)
+        # else:
+        #     print("❌ user_email missing — email not sent")
+
+        # ================= METRICS =================
+        metric_cards(all_docs, expiring_docs, expired_docs)
+
+        # ================= ALERT UI =================
+        if expiring_docs:
+            count = len(expiring_docs)
+            st.warning(
+                f"⚠️ {count} document{'s' if count > 1 else ''} "
+                f"{'are' if count > 1 else 'is'} expiring soon!"
+            )
+
+            if st.button("View Expiring Documents", key="exp_btn"):
+                st.session_state.page = "Expiring Soon"
+                st.rerun()
+
+        if expired_docs:
+            count = len(expired_docs)
+            st.error(
+                f"🚨 {count} document{'s' if count > 1 else ''} "
+                f"{'have' if count > 1 else 'has'} expired!"
+            )
+
+            if st.button("View Expired Documents", key="expd_btn"):
+                st.session_state.page = "Expired Documents"
+                st.rerun()
+
+        # ================= ACTION BUTTONS =================
+        st.markdown('<div class="section-title">Quick Actions</div>', unsafe_allow_html=True)
+
+        col1, col2 = st.columns(2)
+
+        with col1:
+            if st.button("Add New Document", use_container_width=True):
+                st.session_state.page = "Add Document"
+                st.rerun()
+
+        with col2:
+            if st.button("Refresh Dashboard", use_container_width=True):
+                st.rerun()
+
+        # ================= RECENT DOCUMENTS =================
+        st.markdown('<div class="section-title">Recent Documents</div>', unsafe_allow_html=True)
+
+        if all_docs:
+            for doc in all_docs:
+
+                col1, col2, col3 = st.columns([4,1,1])
+
+                with col1:
+                    st.markdown(f"""
+                    <div class="doc-card">
+                        <div class="doc-title">{doc.get('title')}</div>
+                        <div class="doc-chip">{doc.get('category')}</div>
+                    </div>
+                    """, unsafe_allow_html=True)
+
+                with col2:
+                    if st.button("Edit", key=f"edit_{doc['id']}",use_container_width=True):
+                        st.session_state.edit_doc = doc
+                        st.session_state.page = "Edit Document"
+                        st.rerun()
+
+                with col3:
+                    if st.button("Delete", key=f"delete_{doc['id']}",use_container_width=True):
+                        delete_document(doc["id"])
+                        st.rerun()
+        else:
+            st.info("No documents added yet.")
+
+def edit_document_page():
+
+    doc = st.session_state.get("edit_doc")
+
+    if not doc:
+        st.error("No document selected")
         return
 
-    # ================= FETCH DATA =================
-    all_docs_resp = get_documents(user_id)
-    expiring_resp = get_expiring_soon_documents(user_id)
-    expired_resp = get_expired_documents(user_id)
+    st.title("✏️ Edit Document")
+
+    # ✅ PREFILLED VALUES
+    title = st.text_input("Title", value=doc.get("title", ""))
+    categories = ["Identity", "Education", "Finance", "Health", "Other"]
+
+    category = st.selectbox(
+        "Category",
+        categories,
+        index=categories.index(doc.get("category")) if doc.get("category") in categories else 0
+    )
     
-    if "alerts_sent" not in st.session_state:
-        requests.post(f"{BASE_URL}/documents/send-alerts/{user_id}")
-        st.session_state.alerts_sent = True
 
-    all_docs = all_docs_resp.json() if all_docs_resp.status_code == 200 else []
-    expiring_docs = expiring_resp.json() if expiring_resp.status_code == 200 else []
-    expired_docs = expired_resp.json() if expired_resp.status_code == 200 else []
+    expiry_date = st.date_input(
+        "Expiry Date",
+        value=datetime.strptime(doc["expiry_date"], "%Y-%m-%d").date()
+        if doc.get("expiry_date") else None
+    )
 
-    print("📄 ALL DOCS:", all_docs)
-    print("📧 USER EMAIL:", user_email)
+    notes = st.text_area("Notes", value=doc.get("notes", ""))
 
-    # ================= EMAIL ALERT TRIGGER =================
-    # if user_email:
-    #     check_and_send_alerts(all_docs, user_email)
-    # else:
-    #     print("❌ user_email missing — email not sent")
+    if st.button("Update Document"):
 
-    # ================= METRICS =================
-    metric_cards(all_docs, expiring_docs, expired_docs)
+        payload = {
+            "title": title,
+            "category": category,
+            "expiry_date": str(expiry_date) if expiry_date else None,
+            "notes": notes
+        }
 
-    # ================= ALERT UI =================
-    if expiring_docs:
-        count = len(expiring_docs)
-        st.warning(
-            f"⚠️ {count} document{'s' if count > 1 else ''} "
-            f"{'are' if count > 1 else 'is'} expiring soon!"
+        response = requests.put(
+            f"{BASE_URL}/documents/update/{doc['id']}",
+            json=payload
         )
 
-        if st.button("View Expiring Documents", key="exp_btn"):
-            st.session_state.page = "Expiring Soon"
+        if response.status_code == 200:
+            st.session_state.success_msg = "✅ Document updated successfully"
+
+            # 🔥 RESET ALERTS IF DATE CHANGED
+            st.session_state.page = "Dashboard"
             st.rerun()
-
-    if expired_docs:
-        count = len(expired_docs)
-        st.error(
-            f"🚨 {count} document{'s' if count > 1 else ''} "
-            f"{'have' if count > 1 else 'has'} expired!"
-        )
-
-        if st.button("View Expired Documents", key="expd_btn"):
-            st.session_state.page = "Expired Documents"
-            st.rerun()
-
-    # ================= ACTION BUTTONS =================
-    st.markdown('<div class="section-title">Quick Actions</div>', unsafe_allow_html=True)
-
-    col1, col2 = st.columns(2)
-
-    with col1:
-        if st.button("Add New Document", use_container_width=True):
-            st.session_state.page = "Add Document"
-            st.rerun()
-
-    with col2:
-        if st.button("Refresh Dashboard", use_container_width=True):
-            st.rerun()
-
-    # ================= RECENT DOCUMENTS =================
-    st.markdown('<div class="section-title">Recent Documents</div>', unsafe_allow_html=True)
-
-    if all_docs:
-        for doc in all_docs[:5]:
-            st.markdown(f"""
-            <div class="doc-card">
-                <div class="doc-title">{doc.get('title', 'No Title')}</div>
-                <div class="doc-chip">{doc.get('category', 'No Category')}</div>
-            </div>
-            """, unsafe_allow_html=True)
-    else:
-        st.info("No documents added yet.")
+        else:
+            st.error("❌ Failed to update document")
 
 def add_document_page():
     show_header()
@@ -827,7 +913,7 @@ def documents_page():
 
         st.markdown(details_html, unsafe_allow_html=True)
 
-        c1, c2, c3 = st.columns([1.2, 1.2, 1])
+        c1, c2, c3, c4= st.columns([1,1,1,1])
 
         with c1:
             if file_url:
@@ -849,6 +935,12 @@ def documents_page():
             if st.button("Delete", key=f"delete_{doc['id']}", use_container_width=True):
                 delete_document(doc["id"])
                 st.session_state.success_msg = "🗑️ Document deleted"
+                st.rerun()
+                
+        with c4:
+            if st.button("Edit", key=f"edit_{doc['id']}", use_container_width=True):
+                st.session_state.edit_doc = doc
+                st.session_state.page = "Edit Document"
                 st.rerun()
 
 def expiring_page():
@@ -948,7 +1040,6 @@ if st.session_state.get("success_msg"):
     st.toast(st.session_state.success_msg)
     st.session_state.success_msg = None
 
-
 if not st.session_state.logged_in:
     set_background("hero.png", overlay_opacity=0.08)
 
@@ -975,3 +1066,5 @@ else:
         expiring_page()
     elif page == "Expired Documents":
         expired_page()
+    elif page == "Edit Document":
+        edit_document_page()

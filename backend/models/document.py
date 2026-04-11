@@ -1,8 +1,8 @@
 from sqlalchemy import Column, Integer, String, Date, DateTime, ForeignKey, Text
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-from backend.database.base import Base
-
+from database.base import Base
+from sqlalchemy import Date
 
 class Document(Base):
     __tablename__ = "documents"
@@ -18,3 +18,4 @@ class Document(Base):
 
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     owner = relationship("User", back_populates="documents")
+    last_alert_sent = Column(Date, nullable=True)

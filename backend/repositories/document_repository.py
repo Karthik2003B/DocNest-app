@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from backend.models.document import Document
+from models.document import Document
 
 
 class DocumentRepository:

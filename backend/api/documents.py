@@ -5,14 +5,14 @@ from pathlib import Path
 import shutil
 import uuid
 from datetime import date
-from backend.models.document import Document
-from backend.database.connection import get_db
-from backend.schemas.document import DocumentResponse
-from backend.services.document_service import DocumentService
+from models.document import Document
+from database.connection import get_db
+from schemas.document import DocumentResponse
+from services.document_service import DocumentService
 from datetime import date
-from backend.utils.email import send_email
-from backend.repositories.user_repository import UserRepository
-from backend.utils.email_template import build_email_template
+from utils.email import send_email
+from repositories.user_repository import UserRepository
+from utils.email_template import build_email_template
 router = APIRouter(prefix="/documents", tags=["Documents"])
 
 UPLOAD_DIR = Path("uploads")
@@ -98,40 +98,102 @@ def send_alerts(user_id: int, db: Session = Depends(get_db)):
     today = date.today()
 
     for doc in docs:
-        if doc.expiry_date:
+        if not doc.expiry_date:
+            continue
 
-            days_left = (doc.expiry_date - today).days
+        days_left = (doc.expiry_date - today).days
 
-            # 🚨 EXPIRED
-            if days_left < 0:
-                print("🚨 Sending expired email")
+        # 🚫 PREVENT DUPLICATE EMAILS
+        if doc.last_alert_sent == today:
+            continue
 
-                html = build_email_template(
-                    title="🚨 Document Expired",
-                    message=f'Your document "<b>{doc.title}</b>" has expired.',
-                    highlight=f"Expiry Date: {doc.expiry_date}"
-                )
+        subject = None
+        html = None
+
+        # 📅 ALERT RULES
+        if days_left == 7:
+            subject = "📅 DocNest Reminder: 7 Days Left"
+            html = build_email_template(
+                title="📅 Reminder",
+                message=f'Your document "<b>{doc.title}</b>" will expire in 7 days.',
+                highlight=f"Expiry Date: {doc.expiry_date}"
+            )
+
+        elif days_left == 3:
+            subject = "⚠️ DocNest Alert: 3 Days Left"
+            html = build_email_template(
+                title="⚠️ Expiring Soon",
+                message=f'Your document "<b>{doc.title}</b>" will expire in 3 days.',
+                highlight=f"Expiry Date: {doc.expiry_date}"
+            )
+
+        elif days_left == 1:
+            subject = "🚨 DocNest Alert: Expires Tomorrow"
+            html = build_email_template(
+                title="🚨 Final Warning",
+                message=f'Your document "<b>{doc.title}</b>" will expire tomorrow.',
+                highlight=f"Expiry Date: {doc.expiry_date}"
+            )
+
+        elif days_left == 0:
+            subject = "❌ DocNest Alert: Expired Today"
+            html = build_email_template(
+                title="❌ Expired Today",
+                message=f'Your document "<b>{doc.title}</b>" has expired today.',
+                highlight=f"Expiry Date: {doc.expiry_date}"
+            )
+
+        elif days_left == -1:
+            subject = "⚠️ DocNest Alert: Expired Yesterday"
+            html = build_email_template(
+                title="⚠️ Recently Expired",
+                message=f'Your document "<b>{doc.title}</b>" expired yesterday.',
+                highlight=f"Expiry Date: {doc.expiry_date}"
+            )
+
+        elif days_left == -7:
+            subject = "📌 DocNest Final Reminder"
+            html = build_email_template(
+                title="📌 Still Expired",
+                message=f'Your document "<b>{doc.title}</b>" is still expired.',
+                highlight=f"Expiry Date: {doc.expiry_date}"
+            )
+
+        # 📧 SEND EMAIL
+        if subject:
+            try:
+                print(f"📧 Sending alert for {doc.title}")
 
                 send_email(
                     to_email=user.email,
-                    subject="🚨 DocNest Alert: Document Expired",
+                    subject=subject,
                     html_content=html
                 )
 
-            # 🔔 EXPIRING SOON
-            elif days_left == 3:
-                print("🔔 Sending expiring soon email")
+                doc.last_alert_sent = today  # ✅ mark sent
 
-                html = build_email_template(
-                    title="⚠️ Expiring Soon",
-                    message=f'Your document "<b>{doc.title}</b>" will expire soon.',
-                    highlight="Expires in 3 days"
-                )
+            except Exception as e:
+                print("Email failed:", e)
 
-                send_email(
-                    to_email=user.email,
-                    subject="⚠️ DocNest Alert: Expiring Soon",
-                    html_content=html
-                )
+    db.commit()
 
     return {"message": "Alerts checked"}
+
+@router.put("/update/{doc_id}")
+def update_document(doc_id: int, data: dict, db: Session = Depends(get_db)):
+
+    doc = db.query(Document).filter(Document.id == doc_id).first()
+
+    if not doc:
+        raise HTTPException(status_code=404, detail="Document not found")
+
+    # update fields
+    doc.title = data.get("title", doc.title)
+    doc.category = data.get("category", doc.category)
+    doc.expiry_date = data.get("expiry_date", doc.expiry_date)
+    doc.notes = data.get("notes", doc.notes)
+
+    db.commit()
+    db.refresh(doc)
+
+    return {"message": "Document updated successfully"}

@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from backend.database.connection import get_db
-from backend.schemas.user import UserCreate, UserLogin, UserResponse
-from backend.services.auth_service import AuthService
+from database.connection import get_db
+from schemas.user import UserCreate, UserLogin, UserResponse
+from services.auth_service import AuthService
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
@@ -14,12 +14,16 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
     return service.register_user(user.name, user.email, user.password)
 
 
-@router.post("/login", response_model=UserResponse)
+@router.post("/login")
 def login(user: UserLogin, db: Session = Depends(get_db)):
     service = AuthService(db)
-    return service.login_user(user.email, user.password)
+    db_user = service.login_user(user.email, user.password)
 
-
+    return {
+        "id": db_user.id,
+        "name": db_user.name,
+        "email": db_user.email
+    }
 @router.post("/verify-otp")
 def verify_otp(email: str, otp: str, db: Session = Depends(get_db)):
     service = AuthService(db)
