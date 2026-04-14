@@ -5,6 +5,7 @@ from utils import (check_and_send_alerts)
 from datetime import datetime
 BASE_DIR = Path(__file__).resolve().parent
 import requests
+import time
 BASE_URL = "https://docnest-9cwt.onrender.com"
 
 from utils import (
@@ -613,6 +614,11 @@ def dashboard_page():
     if st.session_state.get("logged_in"):
 
         user_id = st.session_state.get("user_id")
+        
+        
+        if "last_alert_check" not in st.session_state or time.time() - st.session_state.last_alert_check > 300:
+            requests.post(f"{BASE_URL}/documents/send-alerts/{user_id}")
+            st.session_state.last_alert_check = time.time()
 
         # 🔥 ADD THIS LINE
         check_and_send_alerts(user_id)
@@ -917,11 +923,11 @@ def documents_page():
 
         with c1:
             if file_url:
-                st.link_button("View Document", file_url, use_container_width=True)
+                st.link_button("View", file_url, use_container_width=True)
 
         with c2:
             if doc.get("file_url"):
-                file_bytes, filename = fetch_file_bytes(doc["file_url"])
+                file_bytes, filename = fetch_file_bytes(file_url)
                 if file_bytes:
                     st.download_button(
                         label="Download",
