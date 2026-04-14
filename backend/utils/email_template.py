@@ -65,7 +65,7 @@ def build_email_template(title, message, highlight=None):
                                 <!-- FALLBACK LINK -->
                                 <p style="color:#64748b; font-size:12px; text-align:center; margin-top:20px;">
                                     If the button doesn’t work, copy this link:<br>
-                                    https://docnest-app-xaduyam6dh5zthla9t9b3e.streamlit.app/
+                                    https://docnest-app-gmn5sk4fhhyd5a7av8p6nt.streamlit.app/
                                 </p>
 
                             </td>
